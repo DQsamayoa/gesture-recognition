@@ -1,0 +1,38 @@
+\usepackage{fancyhdr}
+\usepackage{nicefrac}
+\usepackage{xfrac}
+\usepackage{cancel}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{accents}
+\usepackage{bbm}
+\usepackage{enumitem}
+\usepackage{mathtools}
+\usepackage{booktabs}
+\usepackage{bm}
+\usepackage{titling}
+\usepackage{wrapfig}
+\usepackage{geometry}
+\usepackage{footnote}
+
+\geometry{
+	top = 1.5in,
+	bottom = 1in,
+	headheight = 90pt
+}
+
+\pretitle{%
+  \begin{center}
+  \LARGE
+  \includegraphics[width = 0.5\textwidth]{imgs/itam-logo.png} \\ [\bigskipamount]
+}
+\posttitle{\end{center}}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\includegraphics[width = 0.1\textwidth]{imgs/itam-logo.png}}
+\fancyhead[RE,LO]{Research Stay}
+\fancyfoot[CE,CO]{\leftmark}
+\fancyfoot[LE,RO]{\thepage}
+ 
+\renewcommand{\headrulewidth}{2pt}
+\renewcommand{\footrulewidth}{1pt}
