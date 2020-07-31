@@ -1,0 +1,20 @@
+name: cnn-lstm
+
+channels:
+  - conda-forge
+
+dependencies:
+  - python=3.7
+  - h5py
+  - ipykernel
+  - matplotlib
+  - numpy
+  - pillow
+  - pip
+  - pyyaml
+  - scikit-learn
+  - pip:
+    - mlflow
+    - opencv-contrib-python
+    - tensorflow-gpu
+    - keras-video-generators
