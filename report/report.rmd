@@ -1,0 +1,69 @@
+---
+title: "Emotional Body Gesture Recognition"
+subtitle: "Research Stay"
+author:
+  - "Samayoa Donado Victor Augusto"
+  - "Marmol Yahya Juan Salvador"
+date: "July 27, 2020"
+output:
+  pdf_document:
+    toc: true
+    number_sections: false
+    fig_caption: true
+    highlight: kate
+    df_print: kable
+    includes:
+      in_header: tex/header.tex
+bibliography: tex/bibliography.bib
+fontsize: 12pt
+documentclass: article
+classoption: twoside
+fig_align: "center"
+---
+
+\newpage
+
+```{r setup, include = FALSE, eval = TRUE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.height = 4)
+
+# Se cargan las librerias a utilizar
+library(tidyverse)
+library(scales)
+library(grid)
+library(kableExtra)
+library(latex2exp)
+```
+
+# Introduction
+
+Humans use gestures and body movements to comunicate certan information in a nonverbal mechanism. Emotios are a part of human behavior and the facial expressions and body movement can be as part of a deliberate action or subconsciously revealing intentions or attitude [@Escalera01].
+
+Nowadays, with the rise of the computer vision, the develop of clasification algorithms for images had been productive. Some examples of those algorithms are facenet [@facenet], resnet [@resnet], inceptionV3 [@inception3] or YOLOv3 [@yolo3]. The accuracy of this algorithms is helping business to implementedd in their process in order to reduce costs or add an extra layer of analisys and quality.
+
+With the advance in deep learning techniques some companies had begun to explore and develop more complicated algorithms for Autonomous Driving.In this case, it is not only the image recognition an important part but also the sequence of the actions along with the objects detected that need to be implemented.
+
+So, we asked ourselves about the state of the art for emotions and body gesture recognition. In this case, a single image is not enough because not all the expresions are fully explicit and require sequences of certain actions to identify them. Along with that, the human emotions are subjectives and even humans are not capables to read all of them correclty.
+
+The capacity to build an architecture and train a model to classify the emotions of the persons throught the body gesture can be an excellent asset asset for companies where the customer service is a priority and get the ability of identify when the client is not happy. But the applications of this kinds of systems is not limited to this. The objetive of this work is to understand what are the advances made in this area.
+
+
+# Literature Review
+
+@Noroozi01 made an study analizing multiples studies and identified that gestures can be classified in intrinsic, extrinsic and a result of natural selection. Also, they mention that body language has a lot of information about emotions. Through the survey, @Noroozi01 identified that face is the principal source of information to identify emotions, but hands and head position are very rich in the body language and can help to increase accuracy in the classification. Those ideas are the base of the two main models to analyze emotional body gesture.
+
+The first model has focus the human body where studies like @Bernhardt01 and @Wu07 analyzed from a spatio-temporal movement structures and considering that some expressions are not additives; like walk and eat at the same time. In order to solve this problems, some researches tried to use two different approachs; part based models and kinematics models.
+
+Part based models try to model the human body as independent parts and then use compositional rules to model the gestures. While, kinematic models tries to simplify the human body as a cyclical tree graphs to infer gestures. The principal problem about those approachs, for this project, is that can't model emotions.
+
+On the other hand, there are models that try to detect emotions throught three main categories [@Kolakowska01]. The first approach is called categorical model and it tries to classify emotions under the assumption that humans have universal expressions like happiness and sadness [@Ekman01; @Ekman02]. The second approach is the dimensional model and the objective is to try to classify emotions using latent dimensions, but the continuous nature of this approach is very complex due to the high number of dimensions. Last, the thirds approach is the componential model and its main idea is to solve the problem using a mix of the two previous models, its hypotesis is that exist primary emotions, like happines or sadnes, that are the base for more complex ones.
+
+
+# Metodology
+
+# Results
+
+# Summary
+
+# Apendix
+
+# References
