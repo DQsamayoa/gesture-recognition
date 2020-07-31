@@ -1,1 +1,8 @@
+# Ignoring pdf files that can be created with the report script
 *.pdf
+
+# Ignoring all the __pycache__ files
+*__pycache__
+
+# Ignoring al the tensorflow models that can be created with the script
+*.h5
