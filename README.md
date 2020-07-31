@@ -13,3 +13,10 @@ Dependencies
 - tensorflow
 - keras-video-generators
 
+The repository has an `environmet.yml` file to install all the dependencies using conda:
+
+```
+conda env create -f environment.yml
+```
+
+the conda environment is called `cnn-lstm`.
