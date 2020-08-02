@@ -30,14 +30,16 @@ class buildModel:
         if not os.path.exists(self.base_model_path):
             os.makedirs(self.base_model_path)
 
-    def get_cnn_model(self, model_name = 'inception', weights = 'imagenet'):
+        self.cnn_models = ['inception', 'inception_resnet', 'resnet101', 'resnet152', 'resnet50', 'yolo']
+
+    def __get_cnn_model(self, model_name = 'inception', weights = 'imagenet'):
         """
         Parameters
         ----------
-        model_name: str {'inception', 'facenet', 'resnet101', 'resnet152', 'resnet50', 'yolo'}
+        model_name: str {'inception', 'inception_resnet', 'resnet101', 'resnet152', 'resnet50', 'yolo'}
             Determine the CNN model to retrieve:
             - 'inception'(default): InceptionV3 architechture with imagenet weights (default)
-            - 'facenet': Facenet architecture with weights
+            - 'inception_resnet': InceptionResNetV2 architecture with imagenet weights (default)
             - 'resnet101': ResNet101_v2 architechture with imagenet weights (default)
             - 'resnet152': ResNet152_v2 architechture with imagenet weights (default)
             - 'resnet50': ResNet50_v2 architechture with imagenet weights (default)
@@ -48,19 +50,22 @@ class buildModel:
             - None: Use Random initialization
             - 'imagenet' (default): Use the imagenet weights pre-trained
             - path_to_file: The path to the weights file to be loaded
-        
+
         Raises
         ------
         NotImplementedError
-        
+
         Returns
         -------
         """
-        
+
         # Retrieveng architechture and weights from the web
         if model_name == 'inception':
             cnn_model = tf_app.InceptionV3(weights = weights, include_top = False)
             cnn_model.save(os.path.join(self.base_model_path, '{}_v3.h5'.format(model_name)))
+        elif model_name == 'inception_resnet':
+            cnn_model = tf_app.InceptionResNetV2(weights = weights, include_top = False)
+            cnn_model.save(os.path.join(self.base_model_path, '{}_v2.h5'.format(model_name)))
         elif model_name == 'resnet101':
             cnn_model = tf_app.ResNet101V2(weights = weights, include_top = False)
             cnn_model.save(os.path.join(self.base_model_path, '{}_v2.h5'.format(model_name)))
@@ -70,3 +75,10 @@ class buildModel:
         elif model_name == 'resnet50':
             cnn_model = tf_app.ResNet101V2(weights = weights, include_top = False)
             cnn_model.save(os.path.join(self.base_model_path, '{}_v2.h5'.format(model_name)))
+        elif model_name == 'yolo':
+            # TODO: implement load for yolo version
+            pass
+        else:
+            return False
+
+        return True
