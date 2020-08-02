@@ -53,10 +53,11 @@ class buildModel:
 
         Raises
         ------
-            NameError: If model_name is not defined in the self.cnn_models.            
+            NameError: If model_name is not defined in the self.cnn_models.
 
         Returns
         -------
+            bool: True if succesful, False otherwise.
         """
 
         assert model_name in self.cnn_models, NameError
