@@ -53,11 +53,13 @@ class buildModel:
 
         Raises
         ------
-        NotImplementedError
+            NameError: If model_name is not defined in the self.cnn_models.            
 
         Returns
         -------
         """
+
+        assert model_name in self.cnn_models, NameError
 
         # Retrieveng architechture and weights from the web
         if model_name == 'inception':
