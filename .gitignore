@@ -6,3 +6,6 @@
 
 # Ignoring al the tensorflow models that can be created with the script
 *.h5
+
+# Ignoring yolo's weights
+*yolo*weights*
