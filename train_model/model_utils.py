@@ -47,11 +47,11 @@ class buildModel:
         ----------
         model_name: str {'inception', 'inception_resnet', 'resnet101', 'resnet152', 'resnet50', 'yolo'}
             Determine the CNN model to retrieve:
-            - 'inception'(default): InceptionV3 architechture with imagenet weights (default)
-            - 'inception_resnet': InceptionResNetV2 architecture with imagenet weights (default)
-            - 'resnet101': ResNet101_v2 architechture with imagenet weights (default)
-            - 'resnet152': ResNet152_v2 architechture with imagenet weights (default)
-            - 'resnet50': ResNet50_v2 architechture with imagenet weights (default)
+            - 'inception'(default): InceptionV3 architechture with the defined weights
+            - 'inception_resnet': InceptionResNetV2 architecture with the defined weights
+            - 'resnet101': ResNet101_v2 architechture with the defined weights
+            - 'resnet152': ResNet152_v2 architechture with the defined weights
+            - 'resnet50': ResNet50_v2 architechture with the defined weights
             - 'yolo': YOLOv3 architechture with weights
 
         weights: str, {None, 'imagenet', path_to_file}
@@ -75,7 +75,6 @@ class buildModel:
         # Retrieveng architechture and weights from the web
         if model_name == 'inception':
             cnn_model = tf_app.InceptionV3(weights = weights, include_top = False)
-
         elif model_name == 'inception_resnet':
             cnn_model = tf_app.InceptionResNetV2(weights = weights, include_top = False)
         elif model_name == 'resnet101':
@@ -139,15 +138,17 @@ class buildModel:
         """ Load CNN model for the gesture-recognition architecture.
         Parameters
         ----------
-        fule_path: str, Optional
-            A file path to retrieve the CNN model to use.
+        file_path: str, Optional
+            A file path to retrieve the CNN model to use. If None (Default) provided, it will try to load the model from
+            the predefined base path of the class
+
         model_name: str {'inception', 'inception_resnet', 'resnet101', 'resnet152', 'resnet50', 'yolo'}
             Determine the CNN model to retrieve:
-            - 'inception'(default): InceptionV3 architechture with imagenet weights (default)
-            - 'inception_resnet': InceptionResNetV2 architecture with imagenet weights (default)
-            - 'resnet101': ResNet101_v2 architechture with imagenet weights (default)
-            - 'resnet152': ResNet152_v2 architechture with imagenet weights (default)
-            - 'resnet50': ResNet50_v2 architechture with imagenet weights (default)
+            - 'inception'(default): InceptionV3 architechture with the defined weights
+            - 'inception_resnet': InceptionResNetV2 architecture with the defined weights
+            - 'resnet101': ResNet101_v2 architechture with the defined weights
+            - 'resnet152': ResNet152_v2 architechture with the defined weights
+            - 'resnet50': ResNet50_v2 architechture with the defined weights
             - 'yolo': YOLOv3 architechture with weights
 
         weights: str, {None, 'imagenet', path_to_file}
@@ -169,9 +170,13 @@ class buildModel:
 
         # Build file path for pre-defined models, in the case the file_path is not provided
         if file_path is None:
-            file_path = os.path.join(self.base_model_path, self.cnn_models[model_name])
+            # Retrieve the cnn model from the file path using the weights defined
+            file_path = os.path.join(self.base_model_path, model_name)
 
-        # Retrieve the cnn model from the file path using the weights defined
+            # Validate if the model_name is for the file or the cnn model
+            if not os.path.exist(file_path):
+                file_path = os.path.join(self.base_model_path, self.cnn_models[model_name])
+
         cnn_model = self.__get_cnn_model(file_path, weights)
 
         # True for not retrain the weights of the cnn model, False otherwise.
