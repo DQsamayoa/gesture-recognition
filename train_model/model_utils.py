@@ -242,7 +242,7 @@ class buildModel:
         rnn_model.add(rnn_layer)
 
         # Define the cnn-lstm model for the gesture-recognition
-        self.rnn_model = rnn_model
+        self.rnn_layer = rnn_model
 
         return self
 
@@ -275,10 +275,10 @@ class buildModel:
             dense_layer = Dense(units, **kwargs)
 
         # Add the dense layer
-        self.dense_layer = self.rnn_layer.add(dense_layer)
+        model = self.rnn_layer
+        model.add(dense_layer)
 
         # Create the decision layer for the output.
-        decision_layer = Dense(number_categories, activation = 'softmax')
-        self.dense_layer.add(decision_layer)
+        model.add(Dense(self.number_categories, activation = 'softmax'))
 
-        return self.dense_layer
+        return model
