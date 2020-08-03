@@ -1,5 +1,7 @@
 import tensorflow.keras.applications as tf_app
 from tensorflow.keras.models import Model, load_model
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import TimeDistributed, GRU, LSTM, Dense
 import os
 
 
@@ -34,12 +36,12 @@ class buildModel:
             os.makedirs(self.base_model_path)
 
         # Define dictionary with the CNN models for the transfer learning
-        self.cnn_models = {'inception': 'inception_v3.h5',
-                            'inception_resnet': 'inception_resnet_v2.h5',
-                            'resnet101': 'resnet101_v2.h5',
-                            'resnet152': 'resnet152_v2.h5',
-                            'resnet50': 'resnet50_v2.h5',
-                            'yolo': 'yolo_v3.h5'}
+        self.cnn_models_dict = {'inception': 'inception_v3.h5',
+                                'inception_resnet': 'inception_resnet_v2.h5',
+                                'resnet101': 'resnet101_v2.h5',
+                                'resnet152': 'resnet152_v2.h5',
+                                'resnet50': 'resnet50_v2.h5',
+                                'yolo': 'yolo_v3.h5'}
 
     def __download_cnn_model(self, model_name = 'inception', weights = 'imagenet'):
         """ Donwload CNN models to use in the gesture-recognition architechture
@@ -62,7 +64,7 @@ class buildModel:
 
         Raises
         ------
-            NameError: If model_name is not defined in the self.cnn_models dictionary.
+            NameError: If model_name is not defined in the self.cnn_models_dict dictionary.
 
         Returns
         -------
@@ -70,7 +72,7 @@ class buildModel:
             A keras model
         """
 
-        assert model_name in self.cnn_models.keys(), NameError("No model_name implemented.")
+        assert model_name in self.cnn_models_dict.keys(), NameError("No model_name implemented.")
 
         # Retrieveng architechture and weights from the web
         if model_name == 'inception':
@@ -91,7 +93,7 @@ class buildModel:
             return None
 
         # Save the model retrieved from the web into local path for future use
-        cnn_model.save(os.path.join(self.base_model_path, self.cnn_models[model_name]))
+        cnn_model.save(os.path.join(self.base_model_path, self.cnn_models_dict[model_name]))
 
         # Flag to control the previous flow
         return cnn_model
@@ -125,7 +127,7 @@ class buildModel:
         except:
             # If the model does not exist, try to download it.
             file_name = os.path.split(file_path)[-1]
-            for key, val in self.cnn_models.items():
+            for key, val in self.cnn_models_dict.items():
                 if val == file_name:
                     model_name = key
                     break
@@ -175,7 +177,7 @@ class buildModel:
 
             # Validate if the model_name is for the file or the cnn model
             if not os.path.exist(file_path):
-                file_path = os.path.join(self.base_model_path, self.cnn_models[model_name])
+                file_path = os.path.join(self.base_model_path, self.cnn_models_dict[model_name])
 
         cnn_model = self.__get_cnn_model(file_path, weights)
 
@@ -187,5 +189,51 @@ class buildModel:
 
         # Define the cnn model to use for the gesture-recognition model
         self.cnn_model = cnn_model
+
+        return self
+
+    def define_rnn_model(self, rnn_layer = None, type = 'lstm', units = 64, **kwargs):
+        """ Create RNN model for the gesture-recognition architecture.
+        Parameters
+        ----------
+        rnn_layer: Keras recurrent layer
+            A keras recurrent neural netwrok layer to use. Default is None.
+
+        type: str {'lstm', 'gru'}
+            Define the recurrent neural network to use:
+            - 'lstm' (Default): Use a LSTM layer for the model
+            - 'gru': Use a GRU layer for the model
+
+        units: int, Optional
+            A positive integer, dimensionality of the output spacae (rnn_layer argument).
+            Default value is 64.
+
+        **kwargs:
+            Key words arguments allowed for the LSTM or GRU layer, depending the one choosed in type.
+
+        Raises
+        ------
+
+        Returns
+        -------
+        self
+        """
+
+        # Create the sequential model with the cnn_model defined
+        rnn_model = Sequential()
+        rnn_model.add(TimeDistributed(self.cnn_model))
+
+        # Create the RNN layer according with the inputs
+        if rnn_layer is None:
+            if type == 'lstm':
+                rnn_layer = LSTM(units, **kwargs)
+            elif type == 'gru':
+                rnn_layer = GRU(units, **kwargs)
+
+        # Add the RNN layer to the sequential model
+        rnn_model.add(rnn_layer)
+
+        # Define the cnn-lstm model for the gesture-recognition
+        self.rnn_model = rnn_model
 
         return self
