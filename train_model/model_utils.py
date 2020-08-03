@@ -246,7 +246,7 @@ class buildModel:
 
         return self
 
-    def define_dense_layer(self, units = 64 dense_layer = None, **kwargs):
+    def define_dense_layer(self, units = 64, dense_layer = None, **kwargs):
         """ Create a dense layer for the gesture-recognition architecture.
         Parameters
         ----------
