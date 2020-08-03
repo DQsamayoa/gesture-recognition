@@ -136,7 +136,7 @@ class buildModel:
 
         return cnn_model
 
-    def define_cnn_model(self, file_path = None, model_name = 'inception', weights = 'imagenet', freeze_model = True):
+    def define_cnn_layer(self, file_path = None, model_name = 'inception', weights = 'imagenet', freeze_model = True):
         """ Load CNN model for the gesture-recognition architecture.
         Parameters
         ----------
@@ -192,7 +192,7 @@ class buildModel:
 
         return self
 
-    def define_rnn_model(self, rnn_layer = None, type = 'lstm', units = 64, **kwargs):
+    def define_rnn_layer(self, rnn_layer = None, type = 'lstm', units = 64, **kwargs):
         """ Create RNN model for the gesture-recognition architecture.
         Parameters
         ----------
