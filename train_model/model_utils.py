@@ -138,7 +138,7 @@ class buildModel:
 
     def define_cnn_layer(self, file_path = None, model_name = 'inception', weights = 'imagenet',
                         freeze_model = True, cnn_layer = None):
-        """ Load CNN model for the gesture-recognition architecture.
+        """ Create a CNN layer for the gesture-recognition architecture.
         Parameters
         ----------
         file_path: str, Optional
@@ -162,6 +162,10 @@ class buildModel:
 
         freeze_model: bool, Optional
             True (Default) if want to freeze (do not train) the cnn layer. False otherwise.
+
+        cnn_layer: Keras recurrent layer
+            A keras convolutional neural netwrok layer to use. Default is None. This parameter has higher
+            precedence if is given.
 
         Raises
         ------
@@ -194,13 +198,10 @@ class buildModel:
 
         return self
 
-    def define_rnn_layer(self, rnn_layer = None, type = 'lstm', units = 64, **kwargs):
-        """ Create RNN model for the gesture-recognition architecture.
+    def define_rnn_layer(self, type = 'lstm', units = 64, rnn_layer = None, **kwargs):
+        """ Create RNN layer for the gesture-recognition architecture.
         Parameters
         ----------
-        rnn_layer: Keras recurrent layer
-            A keras recurrent neural netwrok layer to use. Default is None.
-
         type: str {'lstm', 'gru'}
             Define the recurrent neural network to use:
             - 'lstm' (Default): Use a LSTM layer for the model
@@ -209,6 +210,10 @@ class buildModel:
         units: int, Optional
             A positive integer, dimensionality of the output spacae (rnn_layer argument).
             Default value is 64.
+
+        rnn_layer: Keras recurrent layer
+            A keras recurrent neural netwrok layer to use. Default is None. This parameter has higher
+            precedence if is given.
 
         **kwargs:
             Key words arguments allowed for the LSTM or GRU layer, depending the one choosed in type.
