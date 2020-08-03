@@ -176,7 +176,7 @@ class buildModel:
             file_path = os.path.join(self.base_model_path, model_name)
 
             # Validate if the model_name is for the file or the cnn model
-            if not os.path.exist(file_path):
+            if not os.path.exists(file_path):
                 file_path = os.path.join(self.base_model_path, self.cnn_models_dict[model_name])
 
         cnn_model = self.__get_cnn_model(file_path, weights)
