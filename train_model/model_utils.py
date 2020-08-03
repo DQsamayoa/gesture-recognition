@@ -2,6 +2,7 @@ import tensorflow.keras.applications as tf_app
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import TimeDistributed, GRU, LSTM, Dense
+from tensorflow.keras.optimizers import Adam
 import os
 
 
@@ -244,3 +245,40 @@ class buildModel:
         self.rnn_model = rnn_model
 
         return self
+
+    def define_dense_layer(self, units = 64 dense_layer = None, **kwargs):
+        """ Create a dense layer for the gesture-recognition architecture.
+        Parameters
+        ----------
+
+        units: int, Optional
+            A positive integer, dimensionality of the output spacae (rnn_layer argument).
+            Default value is 64.
+
+        dense_layer: Keras dense layer
+            A keras recurrent neural netwrok layer to use. Default is None. This parameter has higher
+            precedence if is given. This layer should not have the decision layer (softmax or sigmoid).
+
+        **kwargs:
+            Key words arguments allowed for the Dense layer.
+
+        Raises
+        ------
+
+        Returns
+        -------
+        self
+        """
+
+        # Create a dense layer if None is provided
+        if dense_layer is None:
+            dense_layer = Dense(units, **kwargs)
+
+        # Add the dense layer
+        self.dense_layer = self.rnn_layer.add(dense_layer)
+
+        # Create the decision layer for the output.
+        decision_layer = Dense(number_categories, activation = 'softmax')
+        self.dense_layer.add(decision_layer)
+
+        return self.dense_layer
