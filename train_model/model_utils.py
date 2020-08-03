@@ -136,7 +136,8 @@ class buildModel:
 
         return cnn_model
 
-    def define_cnn_layer(self, file_path = None, model_name = 'inception', weights = 'imagenet', freeze_model = True):
+    def define_cnn_layer(self, file_path = None, model_name = 'inception', weights = 'imagenet',
+                        freeze_model = True, cnn_layer = None):
         """ Load CNN model for the gesture-recognition architecture.
         Parameters
         ----------
@@ -145,7 +146,7 @@ class buildModel:
             the predefined base path of the class
 
         model_name: str {'inception', 'inception_resnet', 'resnet101', 'resnet152', 'resnet50', 'yolo'}
-            Determine the CNN model to retrieve:
+            Determine the CNN model to use as CNN layer in the action model:
             - 'inception'(default): InceptionV3 architechture with the defined weights
             - 'inception_resnet': InceptionResNetV2 architecture with the defined weights
             - 'resnet101': ResNet101_v2 architechture with the defined weights
@@ -160,7 +161,7 @@ class buildModel:
             - path_to_weights: The path to the weights file to be loaded
 
         freeze_model: bool, Optional
-            True (Default) if do not want to train the cnn model and want to
+            True (Default) if want to freeze (do not train) the cnn layer. False otherwise.
 
         Raises
         ------
@@ -170,25 +171,26 @@ class buildModel:
         self
         """
 
-        # Build file path for pre-defined models, in the case the file_path is not provided
-        if file_path is None:
-            # Retrieve the cnn model from the file path using the weights defined
-            file_path = os.path.join(self.base_model_path, model_name)
+        if cnn_layer is None:
+            # Build file path for pre-defined models, in the case the file_path is not provided
+            if file_path is None:
+                # Retrieve the cnn model from the file path using the weights defined
+                file_path = os.path.join(self.base_model_path, model_name)
 
-            # Validate if the model_name is for the file or the cnn model
-            if not os.path.exists(file_path):
-                file_path = os.path.join(self.base_model_path, self.cnn_models_dict[model_name])
+                # Validate if the model_name is for the file or the cnn model
+                if not os.path.exists(file_path):
+                    file_path = os.path.join(self.base_model_path, self.cnn_models_dict[model_name])
 
-        cnn_model = self.__get_cnn_model(file_path, weights)
+            cnn_layer = self.__get_cnn_model(file_path, weights)
 
         # True for not retrain the weights of the cnn model, False otherwise.
         if freeze_model:
-            cnn_model.trainable = False
+            cnn_layer.trainable = False
         else:
-            cnn_model.trainable = True
+            cnn_layer.trainable = True
 
         # Define the cnn model to use for the gesture-recognition model
-        self.cnn_model = cnn_model
+        self.cnn_layer = cnn_layer
 
         return self
 
@@ -221,7 +223,7 @@ class buildModel:
 
         # Create the sequential model with the cnn_model defined
         rnn_model = Sequential()
-        rnn_model.add(TimeDistributed(self.cnn_model))
+        rnn_model.add(TimeDistributed(self.cnn_layer))
 
         # Create the RNN layer according with the inputs
         if rnn_layer is None:
