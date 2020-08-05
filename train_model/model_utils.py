@@ -1,7 +1,7 @@
 import tensorflow.keras.applications as tf_app
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras import Sequential
-from tensorflow.keras.layers import TimeDistributed, GRU, LSTM, Dense
+from tensorflow.keras.layers import TimeDistributed, GRU, LSTM, Dense, GlobalMaxPool2D
 from tensorflow.keras.optimizers import Adam
 import os
 
@@ -44,6 +44,8 @@ class buildModel:
                                 'resnet50': 'resnet50_v2.h5',
                                 'yolo': 'yolo_v3.h5'}
 
+        self.input_shape = (5, 299, 299, 3)
+
     def __download_cnn_model(self, model_name = 'inception', weights = 'imagenet'):
         """ Donwload CNN models to use in the gesture-recognition architechture
         Parameters
@@ -77,21 +79,23 @@ class buildModel:
 
         # Retrieveng architechture and weights from the web
         if model_name == 'inception':
-            cnn_model = tf_app.InceptionV3(weights = weights, include_top = False)
+            conv_net = tf_app.InceptionV3
         elif model_name == 'inception_resnet':
-            cnn_model = tf_app.InceptionResNetV2(weights = weights, include_top = False)
+            conv_net = tf_app.InceptionResNetV2
         elif model_name == 'resnet101':
-            cnn_model = tf_app.ResNet101V2(weights = weights, include_top = False)
+            conv_net = tf_app.ResNet101V2
         elif model_name == 'resnet152':
-            cnn_model = tf_app.ResNet152V2(weights = weights, include_top = False)
+            conv_net = tf_app.ResNet152V2
         elif model_name == 'resnet50':
-            cnn_model = tf_app.ResNet101V2(weights = weights, include_top = False)
+            conv_net = tf_app.ResNet101V2
         elif model_name == 'yolo':
             # TODO: implement load for yolo version
             pass
         else:
             # Flag to crontrol the previous flow
             return None
+
+        cnn_model = conv_net(weights = weights, include_top = False, input_shape = self.input_shape[1:])
 
         # Save the model retrieved from the web into local path for future use
         cnn_model.save(os.path.join(self.base_model_path, self.cnn_models_dict[model_name]))
@@ -188,14 +192,11 @@ class buildModel:
 
             cnn_layer = self.__get_cnn_model(file_path, weights)
 
-        # True for not retrain the weights of the cnn model, False otherwise.
-        if freeze_model:
-            cnn_layer.trainable = False
-        else:
-            cnn_layer.trainable = True
+        # Save the boolean value for freeze cnn model and save the cnn model
+        self.freeze_cnn_layer = freeze_model
 
         # Define the cnn model to use for the gesture-recognition model
-        self.cnn_layer = cnn_layer
+        self.cnn_layer = Sequential([cnn_layer, GlobalMaxPool2D()])
 
         return self
 
@@ -229,7 +230,11 @@ class buildModel:
 
         # Create the sequential model with the cnn_model defined
         rnn_model = Sequential()
-        rnn_model.add(TimeDistributed(self.cnn_layer))
+        rnn_model.add(TimeDistributed(self.cnn_layer, input_shape = self.input_shape))
+
+        # Whether freeze or not the cnn layer:
+        # freeze = True -> trainable = False
+        rnn_model.layers[-1].trainable = not self.freeze_cnn_layer
 
         # Create the RNN layer according with the inputs
         if rnn_layer is None:
@@ -246,7 +251,7 @@ class buildModel:
 
         return self
 
-    def define_dense_layer(self, units = 64, dense_layer = None, **kwargs):
+    def define_dense_layer(self, units = 64, activation = 'relu', dense_layer = None, **kwargs):
         """ Create a dense layer for the gesture-recognition architecture.
         Parameters
         ----------
@@ -272,7 +277,7 @@ class buildModel:
 
         # Create a dense layer if None is provided
         if dense_layer is None:
-            dense_layer = Dense(units, **kwargs)
+            dense_layer = Dense(units, activation = activation, **kwargs)
 
         # Add the dense layer
         model = self.rnn_layer
@@ -280,5 +285,6 @@ class buildModel:
 
         # Create the decision layer for the output.
         model.add(Dense(self.number_categories, activation = 'softmax'))
+        model.compile()
 
-        return model
+        return self
