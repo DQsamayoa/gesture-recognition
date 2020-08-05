@@ -251,18 +251,17 @@ class buildModel:
 
         return self
 
-    def define_dense_layer(self, units = 64, activation = 'relu', dense_layer = None, **kwargs):
+    def define_dense_layer(self, units_list = [128, 64], activation = 'relu', **kwargs):
         """ Create a dense layer for the gesture-recognition architecture.
         Parameters
         ----------
 
-        units: int, Optional
-            A positive integer, dimensionality of the output spacae (rnn_layer argument).
-            Default value is 64.
+        units_list: list [int], Optional
+            A list of positive integer, one for each hidden dense layer to add
+            to the output rnn_layer. Default value is [128, 64].
 
-        dense_layer: Keras dense layer
-            A keras recurrent neural netwrok layer to use. Default is None. This parameter has higher
-            precedence if is given. This layer should not have the decision layer (softmax or sigmoid).
+        activation: str, Optional
+            Activation function. Default 'relu'.
 
         **kwargs:
             Key words arguments allowed for the Dense layer.
@@ -275,16 +274,22 @@ class buildModel:
         self
         """
 
-        # Create a dense layer if None is provided
-        if dense_layer is None:
-            dense_layer = Dense(units, activation = activation, **kwargs)
+        assert isinstance(units_list, list), 'Error: a list of integeres needed'
+        assert len(units_list) > 0, 'Error: a list with at least one integer should be provided'
+        assert isinstance(units_list[0], int), 'Error: a list of integeres needed'
 
-        # Add the dense layer
+         # Assign the model variable
         model = self.rnn_layer
-        model.add(dense_layer)
+
+        # Add the dense layer(s)
+        for units in units_list:
+            dense_layer = Dense(units, activation = activation, **kwargs)
+            model.add(dense_layer)
 
         # Create the decision layer for the output.
         model.add(Dense(self.number_categories, activation = 'softmax'))
         model.compile()
+
+        self.model
 
         return self
