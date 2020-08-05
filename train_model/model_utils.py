@@ -8,10 +8,13 @@ import os
 
 class buildModel:
 
-    def __init__(self, store_path = './models'):
+    def __init__(self, number_categories, store_path = './models'):
         """
         Parameters
         ----------
+        number_categories: int
+            A positive integer with the number of categories to classify.
+
         store_path: str, Optional
             A local path where to store the models created in the process.
             The defaul is the subdirectory ./models
@@ -44,7 +47,7 @@ class buildModel:
                                 'resnet50': 'resnet50_v2.h5',
                                 'yolo': 'yolo_v3.h5'}
 
-        self.input_shape = (5, 299, 299, 3)
+        self.number_categories = number_categories
 
     def __download_cnn_model(self, model_name = 'inception', weights = 'imagenet'):
         """ Donwload CNN models to use in the gesture-recognition architechture
@@ -192,6 +195,8 @@ class buildModel:
 
             cnn_layer = self.__get_cnn_model(file_path, weights)
 
+        self.cnn_inputs = cnn_layer.inputs[0].shape[1:]
+
         # Save the boolean value for freeze cnn model and save the cnn model
         self.freeze_cnn_layer = freeze_model
 
@@ -200,10 +205,13 @@ class buildModel:
 
         return self
 
-    def define_rnn_layer(self, type = 'lstm', units = 64, rnn_layer = None, **kwargs):
+    def define_rnn_layer(self, time_steps, type = 'lstm', units = 64, rnn_layer = None, **kwargs):
         """ Create RNN layer for the gesture-recognition architecture.
         Parameters
         ----------
+        time_steps: int
+            The number of observations to use in the recurrent network.
+
         type: str {'lstm', 'gru'}
             Define the recurrent neural network to use:
             - 'lstm' (Default): Use a LSTM layer for the model
@@ -227,6 +235,9 @@ class buildModel:
         -------
         self
         """
+
+        # Define the model inputs considering the time steps for the recurrent network
+        self.input_shape = (time_steps, ) + self.cnn_inputs
 
         # Create the sequential model with the cnn_model defined
         rnn_model = Sequential()
@@ -268,6 +279,7 @@ class buildModel:
 
         Raises
         ------
+            Assert for units_list is a list of integers with at least one element
 
         Returns
         -------
@@ -290,6 +302,6 @@ class buildModel:
         model.add(Dense(self.number_categories, activation = 'softmax'))
         model.compile()
 
-        self.model
+        self.model = model
 
         return self
