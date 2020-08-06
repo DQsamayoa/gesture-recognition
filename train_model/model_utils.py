@@ -3,7 +3,10 @@ from tensorflow.keras.models import Model, load_model
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import TimeDistributed, GRU, LSTM, Dense, GlobalMaxPool2D
 from tensorflow.keras.optimizers import Adam
+import tensorflow.keras as keras
+from keras_video import VideoFrameGenerator
 import os
+import glob
 
 
 class buildModel:
@@ -305,3 +308,97 @@ class buildModel:
         self.model = model
 
         return self
+
+
+class buildDataset:
+
+    def __init__(self, folder_path, video_ext = 'avi'):
+        """
+        Parameters
+        ----------
+        folder_path: str,
+            A local path where the videos are stored. The structure for the folder
+        should be as follow:
+            folder_path
+            +-- folder_category_01
+            |   +-- file_videoA
+            |   +-- file_videoB
+            |   +-- ...
+            +-- folder_category_02
+            |   +-- file_videoA
+            |   +-- file_videoB
+            |   +-- ...
+            +-- folder_category_03
+            |   +-- file_videoA
+            |   +-- file_videoB
+            |   +-- ...
+            +-- ...
+        the name of the folder categories will be used for label, but the name for
+        the video files does not matter.
+
+        video_ext: str, optional
+            The video extension of the file. Default value 'avi'.
+
+        Raises
+        ------
+
+        """
+
+
+        # Use sub directories names as categories/classes
+        videos_path = glob.glob(os.path.join(folder_path, '*'))
+        categories = [i.split(os.path.sep)[1] for i in videos_path]
+        categories.sort()
+        self.categories = categories
+
+        # Create the glob pattern to extract the frames from videos
+        self.glob_pattern = os.path.join(folder_path, '{classname}', '*.' + str(video_ext))
+
+    def create_train_dataset(self, model, prop_val_dataset = 0.33, do_data_aug = True):
+        """ Retrieve the train, validation and test datasets
+
+        model: buildModel class
+            A keras model created by buildModel class.
+
+        prop_val_dataset: float, Optional
+            A float value between 0 and 1 to split the training set into train and
+        validation. Default value 0.33.
+
+        do_data_aug: boolean, Optional
+            Whether or not do data augmentation to the frames. Default value True.
+
+        """
+
+        _, time_step, *size, channels =  model.input_shape
+        self.size = tuple(size)
+        self.channels = channels
+        self.time_step = time_step
+
+        # for data augmentation
+        if do_data_aug:
+            data_aug = keras.preprocessing.image.ImageDataGenerator(
+                zoom_range=.1,
+                horizontal_flip = True,
+                rotation_range = 8,
+                width_shift_range = .2,
+                height_shift_range = .2)
+        else:
+            data_aug = None
+
+        # Create video frame generator
+        train_dataset = VideoFrameGenerator(
+            classes = self.categories,
+            glob_pattern = self.glob_pattern,
+            nb_frames = self.time_step,
+            split_val = prop_val_dataset,
+            shuffle = True,
+            batch_size = None,
+            target_shape = self.size,
+            nb_channel = self.channels,
+            transformation = data_aug,
+            use_frame_cache = True)
+
+        # Create
+        val_dataset = train_dataset.get_validation_generator()
+
+        return train_dataset, val_dataset
