@@ -5,9 +5,16 @@ from tensorflow.keras.layers import TimeDistributed, GRU, LSTM, Dense, GlobalMax
 from tensorflow.keras.optimizers import Adam
 import tensorflow.keras as keras
 from keras_video import VideoFrameGenerator
+import mlflow
+from mlflow.exceptions import MlflowException
+from mlflow.tracking import MlflowClient
+import mlflow.keras
+import logging
 import os
 import glob
 
+logging.basicConfig(level = logging.WARN)
+logger = logging.getLogger(__name__)
 
 class buildModel:
 
@@ -402,3 +409,113 @@ class buildDataset:
         val_dataset = train_dataset.get_validation_generator()
 
         return train_dataset, val_dataset
+
+
+class Experiments:
+
+        def __init__(self, model, train_dataset, val_dataset = None, optimizer = 'Adam',
+                    loss = 'categorical_crossentropy', metrics = ['acc']):
+            """
+            Parameters
+            ----------
+            model: buildModel class
+                A Keras Model from buildModel class.
+
+            train_dataset: keras video generator
+                A keras video generator retrieved from buildDataset to train the model.
+
+            val_dataset: keras video generator, Optional
+                A keras video generator retrieved from buildDataset to validate the model.
+
+            optimizer: str or keras optimizer, Optional
+                A string with the name of the optimizer or the optimizer function for keras.
+            Defaul value is 'Adam'.
+
+            loss: str, loss function, Optional
+                A loss function to use for minimize. Default value 'categorical_crossentropy'.
+
+            metrics: str or list, Optional
+                A string or list of string with the name of the metrics to monitor in the training.
+            Defaul value ['acc'].
+
+            Raises
+            ------
+
+            """
+
+            self.train_dataset = train_dataset
+            self.val_dataset = val_dataset
+            self.optimizer = optimizer
+            self.loss = loss
+            self.metrics = metrics
+
+            model.compile(self.optimizer, self.loss, metrics = self.metrics)
+            self.model = model.model
+
+        def train_model(self, run_name, epochs = 100, batch_size = 16, checkpoint_path = 'chkp',
+                        mlflow_model_path = 'model'):
+            """ Method to get score metrics to validate the model
+            Parameters
+            ----------
+            run_name: str
+                Name to identify the experiment in the MLFlow UI.
+            epochs: int, optional
+                An integer to indicate the number of epochs to train the model.
+            batch_size = int, optional
+                An integer to indicate the size of each batch to train. Default value is 16.
+
+            Raises
+            ------
+            NotImplementedError
+
+            Returns
+            -------
+            None
+                This method save all the information in the MLFlow log
+            """
+
+            # Rutine to start to log the information of the model.
+            with mlflow.start_run(experiment_id = self.experiment_id, run_name = run_name):
+
+                # Create the chekpoint folder if not exists
+                if not os.path.exists(checkpoint_path):
+                    os.makedirs(checkpoint_path)
+
+                # Create the chekpoint name to use
+                chkp_name = os.path.join(checkpoint_path, 'weights.{epoch:02d}-{val_loss:.2f}.hdf5')
+
+                # Define the callbacks with the checkpoint data
+                callbacks = [
+                    keras.callbacks.ReduceLROnPlateau(verbose = 1),
+                    keras.callbacks.ModelCheckpoint(chkp_name, verbose = 1)
+                ]
+
+                # Trainning the model
+                self.model.fit(self.train_dataset,
+                    validation_data = self.val_dataset,
+                    verbose = 1,
+                    epochs = epochs,
+                    callbacks = callbacks
+                )
+
+                # This part is assuming that  the model is from keras. Should be changed if is sklearn, spark, pythorch or another
+                mlflow.keras.log_model(self.model, mlflow_model_path)
+
+                mlflow.end_run()
+
+            return self
+
+        def fine_tunning_model(self, epochs, trainable_layers, optimizer = Adam(1e-5)):
+
+            max_cnn_layers = len(self.model.layers[0].layer.layers[0].layers)
+            trainable_layers = min(max_cnn_layers, trainable_layers)
+
+            self.model.layers[0].trainable = True
+            for layer in self.model.layers[0].layer.layers[0].layers[:trainable_layers]:
+                layer.trainable = False
+
+            self.model.compile()
+
+            self.model.compile(optimizer, self.loss, metrics = self.metrics)
+
+        return self
