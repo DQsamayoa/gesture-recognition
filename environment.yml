@@ -16,5 +16,5 @@ dependencies:
   - pip:
     - mlflow
     - opencv-contrib-python
-    - tensorflow-gpu
+    - tensorflow-cpu
     - keras-video-generators

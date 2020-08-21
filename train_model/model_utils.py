@@ -59,7 +59,7 @@ class buildModel:
 
         self.number_categories = number_categories
 
-    def __download_cnn_model(self, model_name = 'inception', weights = 'imagenet'):
+    def __download_cnn_model(self, input_shape, model_name = 'inception', weights = 'imagenet'):
         """ Donwload CNN models to use in the gesture-recognition architechture
         Parameters
         ----------
@@ -108,7 +108,7 @@ class buildModel:
             # Flag to crontrol the previous flow
             return None
 
-        cnn_model = conv_net(weights = weights, include_top = False, input_shape = self.input_shape[1:])
+        cnn_model = conv_net(weights = weights, include_top = False, input_shape = input_shape)
 
         # Save the model retrieved from the web into local path for future use
         cnn_model.save(os.path.join(self.base_model_path, self.cnn_models_dict[model_name]))
@@ -116,7 +116,7 @@ class buildModel:
         # Flag to control the previous flow
         return cnn_model
 
-    def __get_cnn_model(self, file_path, weights):
+    def __get_cnn_model(self, file_path, weights, input_shape):
         """ Load CNN models to use in the gesture-recognition architechture
         Parameters
         ----------
@@ -150,12 +150,12 @@ class buildModel:
                     model_name = key
                     break
 
-            cnn_model = self.__download_cnn_model(model_name, weights)
+            cnn_model = self.__download_cnn_model(input_shape, model_name, weights)
 
         return cnn_model
 
     def define_cnn_layer(self, file_path = None, model_name = 'inception', weights = 'imagenet',
-                        freeze_model = True, cnn_layer = None):
+                         input_shape = (299, 299, 3), freeze_model = True, cnn_layer = None):
         """ Create a CNN layer for the gesture-recognition architecture.
         Parameters
         ----------
@@ -203,7 +203,7 @@ class buildModel:
                 if not os.path.exists(file_path):
                     file_path = os.path.join(self.base_model_path, self.cnn_models_dict[model_name])
 
-            cnn_layer = self.__get_cnn_model(file_path, weights)
+            cnn_layer = self.__get_cnn_model(file_path, weights, input_shape)
 
         self.cnn_inputs = cnn_layer.inputs[0].shape[1:]
 
@@ -310,7 +310,6 @@ class buildModel:
 
         # Create the decision layer for the output.
         model.add(Dense(self.number_categories, activation = 'softmax'))
-        model.compile()
 
         self.model = model
 
@@ -406,14 +405,15 @@ class buildDataset:
             use_frame_cache = True)
 
         # Create
-        val_dataset = train_dataset.get_validation_generator()
+        train = train_dataset.get_test_generator()
+        validation = train_dataset.get_validation_generator()
 
-        return train_dataset, val_dataset
+        return train, validation
 
 
 class Experiments:
 
-        def __init__(self, model, train_dataset, val_dataset = None, optimizer = 'Adam',
+        def __init__(self, experiment_name, model, train_dataset, val_dataset = None, optimizer = 'Adam',
                     loss = 'categorical_crossentropy', metrics = ['acc']):
             """
             Parameters
@@ -443,6 +443,16 @@ class Experiments:
 
             """
 
+            # If the experiment hasn't been created
+            self.experiment_name = experiment_name
+            try:
+                self.experiment_id = mlflow.create_experiment(self.experiment_name)
+            # if experiment is already created
+            except MlflowException:
+                self.experiment_id = MlflowClient().get_experiment_by_name(self.experiment_name).experiment_id
+
+            mlflow.set_experiment(self.experiment_name)
+
             self.train_dataset = train_dataset
             self.val_dataset = val_dataset
             self.optimizer = optimizer
@@ -450,7 +460,7 @@ class Experiments:
             self.metrics = metrics
 
             model.compile(self.optimizer, self.loss, metrics = self.metrics)
-            self.model = model.model
+            self.model = model
 
         def train_model(self, run_name, epochs = 100, batch_size = 16, checkpoint_path = 'chkp',
                         mlflow_model_path = 'model'):
@@ -494,6 +504,7 @@ class Experiments:
                 self.model.fit(self.train_dataset,
                     validation_data = self.val_dataset,
                     verbose = 1,
+                    batch_size = batch_size,
                     epochs = epochs,
                     callbacks = callbacks
                 )
@@ -514,8 +525,6 @@ class Experiments:
             for layer in self.model.layers[0].layer.layers[0].layers[:trainable_layers]:
                 layer.trainable = False
 
-            self.model.compile()
-
             self.model.compile(optimizer, self.loss, metrics = self.metrics)
 
-        return self
+            return self
