@@ -54,8 +54,7 @@ class buildModel:
                                 'inception_resnet': 'inception_resnet_v2.h5',
                                 'resnet101': 'resnet101_v2.h5',
                                 'resnet152': 'resnet152_v2.h5',
-                                'resnet50': 'resnet50_v2.h5',
-                                'yolo': 'yolo_v3.h5'}
+                                'resnet50': 'resnet50_v2.h5'}
 
         self.number_categories = number_categories
 
@@ -63,14 +62,13 @@ class buildModel:
         """ Donwload CNN models to use in the gesture-recognition architechture
         Parameters
         ----------
-        model_name: str {'inception', 'inception_resnet', 'resnet101', 'resnet152', 'resnet50', 'yolo'}
+        model_name: str {'inception', 'inception_resnet', 'resnet101', 'resnet152', 'resnet50'}
             Determine the CNN model to retrieve:
             - 'inception'(default): InceptionV3 architechture with the defined weights
             - 'inception_resnet': InceptionResNetV2 architecture with the defined weights
             - 'resnet101': ResNet101_v2 architechture with the defined weights
             - 'resnet152': ResNet152_v2 architechture with the defined weights
             - 'resnet50': ResNet50_v2 architechture with the defined weights
-            - 'yolo': YOLOv3 architechture with weights
 
         weights: str, {None, 'imagenet', path_to_file}
             Determine the weights to use in the model:
@@ -101,9 +99,6 @@ class buildModel:
             conv_net = tf_app.ResNet152V2
         elif model_name == 'resnet50':
             conv_net = tf_app.ResNet101V2
-        elif model_name == 'yolo':
-            # TODO: implement load for yolo version
-            pass
         else:
             # Flag to crontrol the previous flow
             return None
@@ -163,14 +158,13 @@ class buildModel:
             A file path to retrieve the CNN model to use. If None (Default) provided, it will try to load the model from
             the predefined base path of the class
 
-        model_name: str {'inception', 'inception_resnet', 'resnet101', 'resnet152', 'resnet50', 'yolo'}
+        model_name: str {'inception', 'inception_resnet', 'resnet101', 'resnet152', 'resnet50'}
             Determine the CNN model to use as CNN layer in the action model:
             - 'inception'(default): InceptionV3 architechture with the defined weights
             - 'inception_resnet': InceptionResNetV2 architecture with the defined weights
             - 'resnet101': ResNet101_v2 architechture with the defined weights
             - 'resnet152': ResNet152_v2 architechture with the defined weights
             - 'resnet50': ResNet50_v2 architechture with the defined weights
-            - 'yolo': YOLOv3 architechture with weights
 
         weights: str, {None, 'imagenet', path_to_file}
             Determine the weights to use in the model:
@@ -360,7 +354,7 @@ class buildDataset:
         # Create the glob pattern to extract the frames from videos
         self.glob_pattern = os.path.join(folder_path, '{classname}', '*.' + str(video_ext))
 
-    def create_train_dataset(self, model, prop_val_dataset = 0.33, do_data_aug = True):
+    def create_train_dataset(self, model, prop_val_dataset = 0.33, do_data_aug = True, batch_size = 8):
         """ Retrieve the train, validation and test datasets
 
         model: buildModel class
@@ -398,17 +392,16 @@ class buildDataset:
             nb_frames = self.time_step,
             split_val = prop_val_dataset,
             shuffle = True,
-            batch_size = None,
+            batch_size = batch_size,
             target_shape = self.size,
             nb_channel = self.channels,
             transformation = data_aug,
             use_frame_cache = True)
 
         # Create
-        train = train_dataset.get_test_generator()
-        validation = train_dataset.get_validation_generator()
+        validation_dataset = train_dataset.get_validation_generator()
 
-        return train, validation
+        return train_dataset, validation_dataset
 
 
 class Experiments:
@@ -462,7 +455,7 @@ class Experiments:
             model.compile(self.optimizer, self.loss, metrics = self.metrics)
             self.model = model
 
-        def train_model(self, run_name, epochs = 100, batch_size = 16, checkpoint_path = 'chkp',
+        def train_model(self, run_name, epochs = 100, checkpoint_path = 'chkp',
                         mlflow_model_path = 'model'):
             """ Method to get score metrics to validate the model
             Parameters
@@ -504,7 +497,6 @@ class Experiments:
                 self.model.fit(self.train_dataset,
                     validation_data = self.val_dataset,
                     verbose = 1,
-                    batch_size = batch_size,
                     epochs = epochs,
                     callbacks = callbacks
                 )
