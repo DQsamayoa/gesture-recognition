@@ -20,3 +20,8 @@ conda env create -f environment.yml
 ```
 
 the conda environment is called `cnn-lstm`.
+
+To Do
+--------
+
+- Modify `run_experiment.py` script to accept arguments to be more flexible.
