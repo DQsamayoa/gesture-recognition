@@ -1,4 +1,4 @@
-from train_models.model_utils import buildModel
+from train_model.model_utils import buildModel
 from train_model.model_utils import buildDataset
 from train_model.model_utils import Experiments
 
