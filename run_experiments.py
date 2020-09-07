@@ -5,7 +5,6 @@ from train_model.model_utils import Experiments
 # Defining variables
 NUMBER_CATEGORIES = 7
 
-
 # Creating the general class
 build_class = buildModel(number_categories = NUMBER_CATEGORIES)
 
@@ -13,9 +12,10 @@ cnn_models = ['inception', 'inception_resnet', 'resnet101', 'resnet152', 'resnet
 
 for cnn_model in cnn_models:
     print("Starting with " + cnn_model + "...")
-# Create a model
+
+    # Create a model
     base_model = build_class \
-                .define_cnn_layer(cnn_model) \
+                .define_cnn_layer(model_name = cnn_model) \
                 .define_rnn_layer(time_steps = 10) \
                 .define_dense_layer([128, 128, 64, 64])
 
@@ -33,7 +33,7 @@ for cnn_model in cnn_models:
     print("Starting fine tunning training...")
 
     # Fine tunning model
-    fine_experiment = new_experiment.fine_tunning_model(50, optimizer = Adam(1e-5)):
+    fine_experiment = new_experiment.fine_tunning_model(50, optimizer = Adam(1e-5))
     fine_tunning_experiment = fine_experiment.train_model \
                                 .train_model(cnn_model + 'v1.1', epochs = 20, checkpoint_path = cnn_model)
 
