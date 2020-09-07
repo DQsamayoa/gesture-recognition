@@ -91,14 +91,19 @@ class buildModel:
         # Retrieveng architechture and weights from the web
         if model_name == 'inception':
             conv_net = tf_app.InceptionV3
+            input_shape = (3, 299, 299)
         elif model_name == 'inception_resnet':
             conv_net = tf_app.InceptionResNetV2
+            input_shape = (3, 299, 299)
         elif model_name == 'resnet101':
             conv_net = tf_app.ResNet101V2
+            input_shape = (3, 224, 224)
         elif model_name == 'resnet152':
             conv_net = tf_app.ResNet152V2
+            input_shape = (3, 224, 224)
         elif model_name == 'resnet50':
-            conv_net = tf_app.ResNet101V2
+            conv_net = tf_app.ResNet50V2
+            input_shape = (3, 224, 224)
         else:
             # Flag to crontrol the previous flow
             return None
@@ -150,7 +155,7 @@ class buildModel:
         return cnn_model
 
     def define_cnn_layer(self, file_path = None, model_name = 'inception', weights = 'imagenet',
-                         input_shape = (299, 299, 3), freeze_model = True, cnn_layer = None):
+                         input_shape = None, freeze_model = True, cnn_layer = None):
         """ Create a CNN layer for the gesture-recognition architecture.
         Parameters
         ----------
