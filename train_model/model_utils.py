@@ -12,6 +12,7 @@ import mlflow.keras
 import logging
 import os
 import glob
+import datetime
 
 logging.basicConfig(level = logging.WARN)
 logger = logging.getLogger(__name__)
@@ -491,7 +492,7 @@ class Experiments:
 
                 # Create the chekpoint name to use
                 chkp_name = os.path.join(checkpoint_path, 'weights.{epoch:02d}-{val_loss:.2f}.hdf5')
-                log_dir = "logs/fit/" + checkpoint_path + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+                log_dir = "logs/fit/" + checkpoint_path + '_' + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
                 # Define the callbacks with the checkpoint data
                 callbacks = [
