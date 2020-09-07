@@ -486,6 +486,7 @@ class Experiments:
 
                 # Create the chekpoint name to use
                 chkp_name = os.path.join(checkpoint_path, 'weights.{epoch:02d}-{val_loss:.2f}.hdf5')
+                log_dir = "logs/fit/" + checkpoint_path + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
                 # Define the callbacks with the checkpoint data
                 callbacks = [
@@ -493,12 +494,14 @@ class Experiments:
                     keras.callbacks.ModelCheckpoint(chkp_name, verbose = 1)
                 ]
 
+                tensorboard_callback = keras.callbacks.TensorBoard(log_dir = log_dir, histogram_freq = 1)
+
                 # Trainning the model
                 self.model.fit(self.train_dataset,
                     validation_data = self.val_dataset,
                     verbose = 1,
                     epochs = epochs,
-                    callbacks = callbacks
+                    callbacks = [callbacks, tensorboard_callback]
                 )
 
                 # This part is assuming that  the model is from keras. Should be changed if is sklearn, spark, pythorch or another
@@ -508,7 +511,7 @@ class Experiments:
 
             return self
 
-        def fine_tunning_model(self, epochs, trainable_layers, optimizer = Adam(1e-5)):
+        def fine_tunning_model(self, trainable_layers, optimizer = Adam(1e-5)):
 
             max_cnn_layers = len(self.model.layers[0].layer.layers[0].layers)
             trainable_layers = min(max_cnn_layers, trainable_layers)
