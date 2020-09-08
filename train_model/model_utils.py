@@ -193,6 +193,21 @@ class buildModel:
         self
         """
 
+        # Retrieveng architechture and weights from the web
+        if model_name == 'inception':
+            self.preprocess_input = tf_app.inception_v3.preprocess_input
+        elif model_name == 'inception_resnet':
+            self.preprocess_input = tf_app.inception_resnet_v2.preprocess_input
+        elif model_name == 'resnet101':
+            self.preprocess_input = tf_app.resnet_v2.preprocess_input
+        elif model_name == 'resnet152':
+            self.preprocess_input = tf_app.resnet_v2.preprocess_input
+        elif model_name == 'resnet50':
+            self.preprocess_input = tf_app.resnet_v2.preprocess_input
+        else:
+            # Flag to crontrol the previous flow
+            return None
+
         if cnn_layer is None:
             # Build file path for pre-defined models, in the case the file_path is not provided
             if file_path is None:
@@ -360,7 +375,7 @@ class buildDataset:
         # Create the glob pattern to extract the frames from videos
         self.glob_pattern = os.path.join(folder_path, '{classname}', '*.' + str(video_ext))
 
-    def create_train_dataset(self, model, prop_val_dataset = 0.33, do_data_aug = True, batch_size = 8):
+    def create_train_dataset(self, model, prop_val_dataset = 0.33, do_data_aug = True, batch_size = 8, preprocess_input = None):
         """ Retrieve the train, validation and test datasets
 
         model: buildModel class
@@ -383,6 +398,7 @@ class buildDataset:
         # for data augmentation
         if do_data_aug:
             data_aug = keras.preprocessing.image.ImageDataGenerator(
+                preprocessing_function = preprocess_input
                 zoom_range=.1,
                 horizontal_flip = True,
                 rotation_range = 8,

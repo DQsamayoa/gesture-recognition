@@ -12,26 +12,24 @@ build_class = buildModel(number_categories = NUMBER_CATEGORIES)
 
 cnn_models = ['inception', 'inception_resnet', 'resnet101', 'resnet152', 'resnet50']
 
-for cnn_model in cnn_models:
-    print("Starting with " + cnn_model + "...")
+for cnn_model_name in cnn_models:
+    print("Starting with " + cnn_model_name + "...")
 
     # Create a model
     base_model = build_class \
-                .define_cnn_layer(model_name = cnn_model) \
+                .define_cnn_layer(model_name = cnn_model_name) \
                 .define_rnn_layer(time_steps = 25) \
                 .define_dense_layer([128, 128, 64, 64], kernel_regularizer = L2(l2 = 0.01))
 
-    my_model = base_model.model
-
     # Retriving dataset
     dataset = buildDataset(folder_path = 'videos', video_ext = 'avi')
-    train, val = dataset.create_train_dataset(model = my_model)
+    train, val = dataset.create_train_dataset(model = base_model.model, preprocess_input = base_model.preprocess_input)
 
     # Training the model
     my_experiment = Experiments(cnn_model, my_model, train, val, optimizer = Adam(0.01))
-    new_experiment = my_experiment.train_model(cnn_model + 'v1.0', epochs = 50, checkpoint_path = cnn_model)
+    new_experiment = my_experiment.train_model(cnn_model_name + 'v1.0', epochs = 50, checkpoint_path = cnn_model_name)
 
-    print("Finishing hard training for "  + cnn_model)
+    print("Finishing hard training for "  + cnn_model_name)
     print("Starting fine tunning training...")
 
     # Fine tunning model
@@ -39,4 +37,4 @@ for cnn_model in cnn_models:
     fine_tunning_experiment = fine_experiment.train_model \
                                 .train_model(cnn_model + 'v1.1', epochs = 5, checkpoint_path = cnn_model)
 
-    print("Finished fine tunning training for "  + cnn_model)
+    print("Finished fine tunning training for "  + cnn_model_name)
