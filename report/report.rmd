@@ -60,6 +60,143 @@ On the other hand, there are models that try to detect emotions throught three m
 
 # Metodology
 
+All the code created to run the experiemnts is in the repository [gesture-recognition](https://github.com/DQsamayoa/gesture-recognition). The sctructure of the repository is as follow:
+
+```bash
+gesture-recognition/
++-- report/
+|   +-- imgs/
+|   +-- tex/
+|   +-- report.rmd
++-- train_model/
+|   +-- __init__.py
+|   +-- model_utils.py
++-- .gitignore
++-- environment.yml
++-- run_experiment.py
+```
+
+- **report**: It is the folder with all the files, images and configuration to create this report in PDf using Rmarkdown
+- **train_model**: It is the folder with the script with the classes created in python to help us with the reproducibility of the experiments
+- **environment.yml**: YAML file with all the python's libraries to create a conda environment to build and train the models
+- **run_experiment.py**: A python's script with all the code to iterate the experiments to test different hyperparameters
+
+To the previous folder, it is needed to add a **videos** folder with the follow structure:
+
+```bash
+videos
++-- folder_category_01
+|   +-- file_videoA
+|   +-- file_videoB
+|   +-- ...
++-- folder_category_02
+|   +-- file_videoA
+|   +-- file_videoB
+|   +-- ...
++-- folder_category_03
+|   +-- file_videoA
+|   +-- file_videoB
+|   +-- ...
++-- ...
+```
+
+this is because the script will take the classes' name from the inner folders and the videos from each category.
+
+## Dataset
+
+We decided to use the dataset [HMDB](https://serre-lab.clps.brown.edu/resource/hmdb-a-large-human-motion-database/) created by @dataset01 since we identify as a reference dataset at the moment of evaluation of algorithms. This dataset has 6,849 videoclips divided into 51 action categories.
+
+Since the dataset doesn't have all the action categories that we would like to analyze (e.g. anger, sadness, fear, surprise, happines, etc.), ee decided to use only seven categories that are related to the actions that we are interested:
+
+- clap
+- eat
+- laugh
+- pick
+- smile
+- talk
+- wave
+
+In this case we decided to use 66% of the videos to train and 33% for validation. So, the number of videos was:
+
+| Category | Train | Validation |
+| :---: | :---: | :---: |
+| clap   | 88 | 42 |
+| eat | 73 | 35 |
+| laugh | 86 | 42 |
+| pick | 72 | 34 |
+| smile | 69 | 33 |
+| talk | 81 | 39 |
+| wave | 70 | 34 |
+| --- | --- | --- |
+| Total | 539 | 259 |
+
+## Architecture
+
+The architecture decided to build the model was the follow:
+
+1. Input: Frames extracted from the videos
+2. CNN: Convolutional neural network used the number of times equal as the number of frames used for Inputs
+3. RNN: Recurrent neural network to process the feature characteristics created by the CNN layer and preserving the order of the frames
+4. Dense layer: A dense layer to receive the recurrent layer output to process and trying to use to classify the video with a softmax output
+
+![](imgs/architecture.png)
+
+We also, decided to use transfer learning to take adbantage of convolutional models already trained. For this, we decided to use just a sample of the multiples ones that already exists:
+
+- InceptionV3
+- Inception-resnetV2
+- Resnet101V2
+- Resnet152V2
+- Resnet50V2
+
+For this architechture we have the next hyperparameters for tunning:
+
+- Input:
+    - Number of frames
+- CNN layer:
+    - Pretrained convolutional network
+    - Number of layers to freeze
+- RNN layer:
+    - Type of recurrent neural network: GRU or LSTM
+    - All the parameters like: units, activation, recurrent activation, etc.
+- Dense layer:
+    - Number of hiden layers
+    - Number of neurons in each layer
+    - Activation for each hidden layer
+    - Regularization
+
+In order to build this architecture, the script `model_utils.py` was created to control all the architecture and make sure of the correct build in each experiment.
+
+## Trainning
+
+In order to reduce the amount of time for trainning, we decided to take a subset of the hyperparameters space. In this case the elements considered to test were:
+
+- **Inputs**
+    - Number of frames used to train the model: 25 and 50.
+- **CNN layer**
+    - The pretrained convolutional network: InceptionV3, Inception-resnetV2, Resnet101V2, Resnet152V2, Resnet50V2
+    - Freeze all the convolutional networks first and train the weights for the others layers
+    - Do a fine tunning after the weights for the last 50 convolutional layers
+- **RNN layer**:
+    - Only use a LSTM layer
+    - Number of units: 64 and 128
+- **Dense layer**
+    - Use relu as activation for all the hidden layers
+    - Use the follow architectures:
+        - [128, 64]: Two hidden layers, one with 128 neurons and the other with 64
+        - [128, 128, 64, 64]: Four hidden layers, two with 128 neurons and two with 64
+    - Use ridge regularization.
+
+The previous considerations give us a hyperparameter space with 64 elements. The steps taken to train the model was as follow:
+
+1. Select a convolutional layer from the list
+2. Build a model full architecture as showed
+3. Freeze all the convolutional layer
+4. Train the weights from the recurrent and dense layer (50 epochs)
+5. Unfreeze the last 50 layers of the convolutional layer
+6. Train all the model with an Adam optimizer with a very low learning rate (5 epochs)
+7. Repeate the process with different hyperparameter
+
 # Results
 
 # Summary
