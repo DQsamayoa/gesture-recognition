@@ -2,6 +2,7 @@ from train_model.model_utils import buildModel
 from train_model.model_utils import buildDataset
 from train_model.model_utils import Experiments
 from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.regularizers import L2
 
 # Defining variables
 NUMBER_CATEGORIES = 7
@@ -17,8 +18,8 @@ for cnn_model in cnn_models:
     # Create a model
     base_model = build_class \
                 .define_cnn_layer(model_name = cnn_model) \
-                .define_rnn_layer(time_steps = 5) \
-                .define_dense_layer([128, 128, 128, 64, 64, 64])
+                .define_rnn_layer(time_steps = 25) \
+                .define_dense_layer([128, 128, 64, 64], kernel_regularizer = L2(l2 = 0.01))
 
     my_model = base_model.model
 
@@ -27,8 +28,8 @@ for cnn_model in cnn_models:
     train, val = dataset.create_train_dataset(model = my_model)
 
     # Training the model
-    my_experiment = Experiments(cnn_model, my_model, train, val)
-    new_experiment = my_experiment.train_model(cnn_model + 'v1.0', epochs = 40, checkpoint_path = cnn_model)
+    my_experiment = Experiments(cnn_model, my_model, train, val, optimizer = Adam(0.01))
+    new_experiment = my_experiment.train_model(cnn_model + 'v1.0', epochs = 50, checkpoint_path = cnn_model)
 
     print("Finishing hard training for "  + cnn_model)
     print("Starting fine tunning training...")
