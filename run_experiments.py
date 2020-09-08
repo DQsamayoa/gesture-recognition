@@ -34,7 +34,6 @@ for cnn_model_name in cnn_models:
 
     # Fine tunning model
     fine_experiment = new_experiment.fine_tunning_model(50, optimizer = Adam(1e-5))
-    fine_tunning_experiment = fine_experiment.train_model \
-                                .train_model(cnn_model + 'v1.1', epochs = 5, checkpoint_path = cnn_model)
+    fine_tunning_experiment = fine_experiment.train_model(cnn_model + 'v1.1', epochs = 5, checkpoint_path = cnn_model)
 
     print("Finished fine tunning training for "  + cnn_model_name)
