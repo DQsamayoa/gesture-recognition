@@ -398,7 +398,7 @@ class buildDataset:
         # for data augmentation
         if do_data_aug:
             data_aug = keras.preprocessing.image.ImageDataGenerator(
-                preprocessing_function = preprocess_input
+                preprocessing_function = preprocess_input,
                 zoom_range=.1,
                 horizontal_flip = True,
                 rotation_range = 8,
