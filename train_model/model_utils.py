@@ -508,7 +508,7 @@ class Experiments:
 
                 # Create the chekpoint name to use
                 chkp_name = os.path.join(checkpoint_path, 'weights.{epoch:02d}-{val_loss:.2f}.hdf5')
-                log_dir = "logs/fit/" + checkpoint_path + '_' + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+                log_dir = "logs/fit/" + checkpoint_path)
 
                 # Define the callbacks with the checkpoint data
                 callbacks = [
