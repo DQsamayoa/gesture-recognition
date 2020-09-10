@@ -523,7 +523,7 @@ class Experiments:
                     validation_data = self.val_dataset,
                     verbose = 1,
                     epochs = epochs,
-                    callbacks = [callbacks, tensorboard_callback]
+                    callbacks = [tensorboard_callback]
                 )
 
                 # This part is assuming that  the model is from keras. Should be changed if is sklearn, spark, pythorch or another
