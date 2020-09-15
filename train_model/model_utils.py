@@ -368,7 +368,7 @@ class buildDataset:
 
         # Use sub directories names as categories/classes
         videos_path = glob.glob(os.path.join(folder_path, '*'))
-        categories = [i.split(os.path.sep)[1] for i in videos_path]
+        categories = [i.split(os.path.sep)[-1] for i in videos_path]
         categories.sort()
         self.categories = categories
 
@@ -508,7 +508,12 @@ class Experiments:
 
                 # Create the chekpoint name to use
                 chkp_name = os.path.join(checkpoint_path, 'weights.{epoch:02d}-{val_loss:.2f}.hdf5')
-                log_dir = "logs/fit/" + checkpoint_path
+                log_dir = checkpoint_path
+
+                # Create the chekpoint folder if not exists
+                if not os.path.exists(log_dir):
+                    os.makedirs(log_dir)
+
 
                 # Define the callbacks with the checkpoint data
                 callbacks = [
@@ -516,7 +521,7 @@ class Experiments:
                     keras.callbacks.ModelCheckpoint(chkp_name, verbose = 1)
                 ]
 
-                tensorboard_callback = keras.callbacks.TensorBoard(log_dir = log_dir, histogram_freq = 1)
+                tensorboard_callback = keras.callbacks.TensorBoard(log_dir = log_dir, histogram_freq = 10)
 
                 # Trainning the model
                 self.model.fit(self.train_dataset,
