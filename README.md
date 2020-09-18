@@ -27,10 +27,10 @@ Clean tensorflow log
 The code used to clean the tensorflow logo in the `report/data` folder is:
 
 ```bash
-awk 'BEGIN {print "cnn_layer loss acc val_loss val_acc"}
+awk 'BEGIN {OFS=","; print "cnn_layer,loss,acc,val_loss,val_acc"}
   /Starting/ || /step/ {
   if ($1 == "Starting" && $3 != "tunning") {cnn_layer=$3}; print cnn_layer,$8,$11,$14,$17;
-  }' training.log | awk '{OFS=","; gsub(/\./,"",$1)}1' > train.csv
+}' training.log | awk '{FS=OFS=","; gsub(/\./,"",$1)}1' > train.csv
 ```
 
 To Do
