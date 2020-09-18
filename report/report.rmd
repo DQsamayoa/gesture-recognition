@@ -183,10 +183,18 @@ In order to reduce the amount of time for trainning, we decided to take a subset
 - **Dense layer**
     - Use relu as activation for all the hidden layers
     - Use the follow architectures:
-        - [128, 64]: Two hidden layers, one with 128 neurons and the other with 64
-        - [128, 128, 64, 64]: Four hidden layers, two with 128 neurons and two with 64
+        - (128, 64): Two hidden layers, one with 128 neurons and the other with 64
+        - (128, 128, 64, 64): Four hidden layers, two with 128 neurons and two with 64
     - Use ridge regularization.
-
+- **Optimizer**
+    - The optimizer used in all the trainnings was Adam, but we modify the betas parameters and the epsilon in order to see their effects in the training.
+```python
+tf.keras.optimizers.Adam(
+    learning_rate=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-07, amsgrad=False,
+    name='Adam', **kwargs
+)
+```
+  
 The previous considerations give us a hyperparameter space with 64 elements. The steps taken to train the model was as follow:
 
 1. Select a convolutional layer from the list
