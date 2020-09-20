@@ -42,16 +42,16 @@ data <- read_csv("data/train.csv",
          col_types = cols(
              .default = col_double(),
              cnn_layer = col_character()
-             )) %>% 
-    mutate_if(is_double, lead) %>% 
-    filter(!is.na(loss)) %>% 
-    filter(cnn_layer != "resnet152") %>% 
-    group_by(cnn_layer) %>% 
-    mutate(epoch = row_number()) %>% 
-    ungroup() %>% 
-    left_join(models_name, by = "cnn_layer") %>% 
-    select(cnn_name, epoch, loss, val_loss, acc, val_acc) %>% 
-    rename(cnn_layer = cnn_name) %>% 
+             )) %>%
+    mutate_if(is_double, lead) %>%
+    filter(!is.na(loss)) %>%
+    filter(cnn_layer != "resnet152") %>%
+    group_by(cnn_layer) %>%
+    mutate(epoch = row_number()) %>%
+    ungroup() %>%
+    left_join(models_name, by = "cnn_layer") %>%
+    select(cnn_name, epoch, loss, val_loss, acc, val_acc) %>%
+    rename(cnn_layer = cnn_name) %>%
     mutate(description = if_else(epoch <= 50, "CNN Freeze", "CNN fine tuning"))
 
 rect_tbl <- tibble(xmin = 51,
@@ -84,6 +84,21 @@ Part based models try to model the human body as independent parts and then use 
 
 On the other hand, there are models that try to detect emotions throught three main categories [@Kolakowska01]. The first approach is called categorical model and it tries to classify emotions under the assumption that humans have universal expressions like happiness and sadness [@Ekman01; @Ekman02]. The second approach is the dimensional model and the objective is to try to classify emotions using latent dimensions, but the continuous nature of this approach is very complex due to the high number of dimensions. Last, the thirds approach is the componential model and its main idea is to solve the problem using a mix of the two previous models, its hypotesis is that exist primary emotions, like happines or sadnes, that are the base for more complex ones.
 
+| Classifier | Performance (%) | # Classes |
+| --- | --- | --- |
+| 1NN-DTW | 53.70 | 4 |
+| J48 or Quinlan's C4.5 | 56.48 | 4 |
+| Hidden Naive Bayes | 51.85 | 4 |
+Table: Comparision of the effect of using various classification methods and different numbers of emotion classes based on HUMAINE EU-IST database. Table taken from [@Escalera01].
+
+| Classifier | Performance (%) | # Classes |
+| --- | --- | --- |
+| Ensemble tree | 90.83 | 5 |
+| Binary decision tree | 76.63 | 5 |
+| K-NN | 86.77 | 5 |
+| SVM | 87.74 | 5 |
+| Neural Network | 89.26 | 5 |
+Table: Comparison of the effect of using various classification methods and different numbers of emotion classes based on the recorded samples by Kinect. The database included by 10 subjects in the age group of 25 +- 5 years. Table taken from [@Escalera01].
 
 # Metodology
 
@@ -214,14 +229,14 @@ In order to reduce the amount of time for trainning, we decided to take a subset
         - (128, 128, 64, 64): Four hidden layers, two with 128 neurons and two with 64
     - Use ridge regularization.
 - **Optimizer**
-    - The optimizer used in all the trainnings was Adam, but we modify the betas parameters and the epsilon in order to see their effects in the training.
+    - The optimizer used in all the trainnings was Adam, but we modify the betas parameters and the epsilon in order to see their effects in the training, as notice in [@adam01, @tf01].
 ```python
 tf.keras.optimizers.Adam(
-    learning_rate=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-07, amsgrad=False,
-    name='Adam', **kwargs
+    learning_rate = 0.001, beta_1 = 0.9, beta_2 = 0.999,
+    epsilon = 1e-07, amsgrad = False, name = 'Adam', **kwargs
 )
 ```
-  
+
 The previous considerations give us a hyperparameter space with 64 elements. The steps taken to train the model was as follow:
 
 1. Select a convolutional layer from the list
@@ -234,25 +249,30 @@ The previous considerations give us a hyperparameter space with 64 elements. The
 
 # Results
 
+Next, we will show the best results obtained for each of the convolutional neural network layer used in the architechture.
+
 ```{r}
-data %>% 
-  group_by(cnn_layer) %>% 
-  filter(epoch == max(epoch)) %>% 
-  select(cnn_layer, ends_with("loss"), ends_with("acc")) %>% 
-  knitr::kable(format = "latex", booktabs = TRUE, longtable = TRUE, linesep = "", digits = 3, 
+data %>%
+  group_by(cnn_layer) %>%
+  filter(epoch == max(epoch)) %>%
+  select(cnn_layer, ends_with("loss"), ends_with("acc")) %>%
+  knitr::kable(format = "latex", booktabs = TRUE, longtable = TRUE, linesep = "", digits = 3,
                caption = "Training results per model",
-               col.names = c("Convolutional layer", "Train", "Validation", "Train", "Validation")) %>% 
-  add_header_above(c("", "Loss" = 2, "Accuracy" = 2)) %>% 
-  row_spec(0, align = "c") %>% 
+               col.names = c("Convolutional layer", "Train", "Validation", "Train", "Validation")) %>%
+  add_header_above(c("", "Loss" = 2, "Accuracy" = 2)) %>%
+  row_spec(0, align = "c") %>%
   kableExtra::kable_styling(latex_options = c("striped", "repeat_header"))
 ```
 
+The first thing to notice is that the accuracy in the validation dataset was better that the models from Table 1, even when our case has 7 classes versus 4 classes. Nevertheless, our accuracy model could not improve as much as the ensemble models from Table 2, but for those cases we need to keep in mind that the videos were from only 10 persons and were taken using a Kinect device.
+
+Next, we show the plots for the loss and accuracy of the reported models in the 60 epochs used for that, it is worth to notice that the first 50 epochs were with the a freezed convolutional network and the last 10 epochs we unfreeze the last 50 layers of the convolutional network to retrain the weights with a very low learning rate for the Adam optimizer.
 
 ```{r, fig.height = 10}
-data %>% 
+data %>%
     rename(train_loss = loss,
-           train_acc = acc) %>% 
-    gather("type_loss", "loss", train_loss, val_loss) %>% 
+           train_acc = acc) %>%
+    gather("type_loss", "loss", train_loss, val_loss) %>%
     ggplot() +
     geom_rect(aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
               fill = "slateblue", alpha = 0.3, data = rect_tbl) +
@@ -273,10 +293,10 @@ data %>%
 ```
 
 ```{r, fig.height = 10}
-data %>% 
+data %>%
     rename(train_loss = loss,
-           train_acc = acc) %>% 
-    gather("type_acc", "accuracy", train_acc, val_acc) %>% 
+           train_acc = acc) %>%
+    gather("type_acc", "accuracy", train_acc, val_acc) %>%
     ggplot() +
     geom_rect(aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
               fill = "slateblue", alpha = 0.3, data = rect_tbl) +
@@ -300,6 +320,8 @@ data %>%
 
 # Summary
 
-# Apendix
+The first conclusion is that the epsilon ($\hat{\varepsilon}$) parameter in the Adam optimizer has a very important impact in the way the model learn the weights. We could notice this because in all of the models it was neccesary to modify the epsilon's value from the Adam optimizer as noticed in [@adam01] and [@tf01]. The final value used was of $\hat{\varepsilon} = 1$ to get the accuracy obtained in the results. It is neccesary to keep doing some experiments to identify if other values are better.
+
+The second conclusion is the lack of data bases related to this topic. There are some of them as we could identify in the literature review, but most of the are short in the number of labeled examples to use.
 
 # References
